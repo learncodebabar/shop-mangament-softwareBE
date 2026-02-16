@@ -1,7 +1,7 @@
 
 
-const PORT = process.env.PORT;
-const MONGO_URI = process.env.MONGO_URI;
-const JWT_SECRET = process.env.JWT_SECRET;
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
+export const PORT = process.env.PORT;
+export const MONGO_URI = process.env.MONGO_URI;
+export const JWT_SECRET = process.env.JWT_SECRET;
+export const EMAIL_USER = process.env.EMAIL_USER;
+export const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
