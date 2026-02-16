@@ -5,6 +5,8 @@ const path = require("path");
 const connectDB = require("./config/db");
 const expenseRoutes = require("./routes/expense");
 
+const { PORT } = require("./env");
+
 // Connect DB
 connectDB();
 
@@ -44,8 +46,8 @@ app.get("/api/health", (req, res) => {
 //
 // ✅ FIXED PORT
 //
-const PORT = process.env.PORT || 3000;
+const MYPORT = PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+app.listen(MYPORT, () => {
+  console.log(`✅ Server running on port ${MYPORT}`);
 });
