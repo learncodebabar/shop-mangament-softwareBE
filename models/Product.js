@@ -1,22 +1,22 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const ProductSchema = new mongoose.Schema(
-  {
-    name: { type: String, required: true },
-    sku: { type: String, unique: true },
-    barcode: String,
-    category: String,
-    location: String,
-    brand: String,
-    supplier: String,
-    unit: String,
-    stock: { type: Number, default: 0 },
-    costPrice: { type: Number, required: true },
-    salePrice: { type: Number, required: true },
-    minStockAlert: { type: Number, default: 10 },
-    image: String,
-  },
-  { timestamps: true },
-);
+const productSchema = new mongoose.Schema({
+  name: { type: String, required: true, trim: true },
+  sku: { type: String, required: true, unique: true, trim: true },
+  barcode: { type: String, sparse: true, unique: true },
+  category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', default: null },
+  supplier: { type: String, default: '' },
+  location: { type: mongoose.Schema.Types.ObjectId, ref: 'Location', default: null },
+  stock: { type: Number, required: true, default: 0, min: 0 },
+  costPrice: { type: Number, required: true, min: 0 },
+  salePrice: { type: Number, required: true, min: 0 },
+  minStockAlert: { type: Number, default: 10, min: 0 },
+  image: { type: String, default: null }
+}, {
+  timestamps: true
+});
 
-module.exports = mongoose.model("Product", ProductSchema);
+// Index for search
+productSchema.index({ name: 'text', sku: 'text', barcode: 'text' });
+
+module.exports = mongoose.model('Product', productSchema);

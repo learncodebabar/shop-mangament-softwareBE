@@ -1,10 +1,9 @@
-require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const fs = require("fs");
 const connectDB = require("./config/db");
 const expenseRoutes = require("./routes/expense");
-
 const { PORT } = require("./env");
 
 // Connect DB
@@ -12,20 +11,19 @@ connectDB();
 
 const app = express();
 
+// ✅ IMPORTANT: Create uploads directory if it doesn't exist
+const uploadDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log("✅ Uploads directory created");
+}
+
 // Middleware
-app.use(cors({
-  origin: true, // Allow all origins in development
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
-}));
-
-// Handle preflight requests
-app.options('*', cors());
-
-
-
+app.use(cors());
 app.use(express.json());
+
+// Serve static files from uploads directory
+app.use("/uploads", express.static(uploadDir));
 
 // Routes
 app.use("/api/auth", require("./routes/auth"));
@@ -54,9 +52,15 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-//
-// ✅ FIXED PORT
-//
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("❌ Server error:", err);
+  res.status(500).json({ 
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+});
+
 const MYPORT = PORT || 3000;
 
 app.listen(MYPORT, () => {
