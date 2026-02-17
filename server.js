@@ -6,8 +6,10 @@ const connectDB = require("./config/db");
 const expenseRoutes = require("./routes/expense");
 const { PORT } = require("./env");
 
-// Connect DB
-connectDB();
+// Connect DB (but don't let it crash the app)
+connectDB().catch(err => {
+  console.error("❌ MongoDB connection error:", err.message);
+});
 
 const app = express();
 
@@ -27,7 +29,6 @@ app.use("/uploads", express.static(uploadDir));
 
 // Routes
 app.use("/api/auth", require("./routes/auth"));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/products", require("./routes/productRoutes"));
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 app.use("/api/customers", require("./routes/customerRoutes"));
@@ -41,7 +42,11 @@ app.use("/api/expenses", expenseRoutes);
 
 // Root route
 app.get("/", (req, res) => {
-  res.send("Shop Management Backend Running");
+  res.json({ 
+    message: "Shop Management Backend Running",
+    status: "ok",
+    time: new Date().toISOString()
+  });
 });
 
 // Health check
@@ -49,6 +54,17 @@ app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
     time: new Date().toISOString(),
+  });
+});
+
+// Debug endpoint
+app.get("/api/debug", (req, res) => {
+  res.json({
+    message: "Debug info",
+    env: process.env.NODE_ENV,
+    hasMongoURI: !!process.env.MONGO_URI,
+    hasJWT: !!process.env.JWT_SECRET,
+    nodeVersion: process.version
   });
 });
 
@@ -61,8 +77,11 @@ app.use((err, req, res, next) => {
   });
 });
 
-const MYPORT = PORT || 3000;
+// ❌ REMOVE THIS ENTIRE BLOCK - THIS IS CAUSING THE CRASH!
+// const MYPORT = PORT || 3000;
+// app.listen(MYPORT, () => {
+//   console.log(`✅ Server running on port ${MYPORT}`);
+// });
 
-app.listen(MYPORT, () => {
-  console.log(`✅ Server running on port ${MYPORT}`);
-});
+// ✅ EXPORT the app for Vercel (THIS IS CRITICAL!)
+module.exports = app;
