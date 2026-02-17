@@ -1,21 +1,17 @@
-// Load environment variables FIRST
-require("dotenv").config();
-
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
 const connectDB = require("./config/db");
 const expenseRoutes = require("./routes/expense");
+const { PORT } = require("./env");
 
-// Connect to MongoDB (but don't crash on Vercel if it fails)
-connectDB().catch(err => {
-  console.error("❌ MongoDB connection error:", err.message);
-});
+// Connect DB
+connectDB();
 
 const app = express();
 
-// ✅ Create uploads directory if it doesn't exist
+// ✅ IMPORTANT: Create uploads directory if it doesn't exist
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -23,18 +19,15 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 // Middleware
-app.use(cors({
-  origin: '*', // Allow all origins for now
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Serve static files
+// Serve static files from uploads directory
 app.use("/uploads", express.static(uploadDir));
 
 // Routes
 app.use("/api/auth", require("./routes/auth"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/products", require("./routes/productRoutes"));
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 app.use("/api/customers", require("./routes/customerRoutes"));
@@ -48,11 +41,7 @@ app.use("/api/expenses", expenseRoutes);
 
 // Root route
 app.get("/", (req, res) => {
-  res.json({ 
-    message: "Shop Management Backend Running",
-    status: "ok",
-    time: new Date().toISOString()
-  });
+  res.send("Shop Management Backend Running");
 });
 
 // Health check
@@ -60,19 +49,6 @@ app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
     time: new Date().toISOString(),
-    env: process.env.NODE_ENV || 'development'
-  });
-});
-
-// Debug endpoint to check environment
-app.get("/api/debug", (req, res) => {
-  res.json({
-    message: "Debug info",
-    env: process.env.NODE_ENV,
-    hasMongoURI: !!process.env.MONGO_URI,
-    hasJWT: !!process.env.JWT_SECRET,
-    nodeVersion: process.version,
-    platform: process.platform
   });
 });
 
@@ -85,11 +61,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ message: `Route ${req.url} not found` });
-});
+const MYPORT = PORT || 3000;
 
-// ❌ NO app.listen() - This is CRITICAL for Vercel!
-// ✅ Instead, export the app
-module.exports = app;
+app.listen(MYPORT, () => {
+  console.log(`✅ Server running on port ${MYPORT}`);
+});
